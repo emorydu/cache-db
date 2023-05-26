@@ -16,7 +16,7 @@ const (
 	dotTmp  = ".tmp"
 )
 
-type Driver struct {
+type driver struct {
 	sync.Mutex
 	mutexes map[string]*sync.Mutex
 	dir     string
@@ -33,7 +33,7 @@ var (
 	ErrResourceUnableRead   = errors.New("missing resource - unable to read record (no name)")
 )
 
-func New(dir string, options *Options) (*Driver, error) {
+func New(dir string, options *Options) (*driver, error) {
 
 	_, _ = fmt.Fprintf(os.Stdout, `
 -----------------------------------------
@@ -54,7 +54,7 @@ func New(dir string, options *Options) (*Driver, error) {
 		opts.Logger = lumber.NewConsoleLogger(lumber.INFO)
 	}
 
-	driver := &Driver{
+	driver := &driver{
 		mutexes: make(map[string]*sync.Mutex, 1000),
 		dir:     dir,
 		log:     opts.Logger,
@@ -68,7 +68,7 @@ func New(dir string, options *Options) (*Driver, error) {
 	return driver, os.MkdirAll(dir, 0755)
 }
 
-func (d *Driver) Write(collection, resource string, v any) error {
+func (d *driver) Write(collection, resource string, v any) error {
 	if len(collection) == 0 {
 		return ErrCollectionUnableWrite
 	}
@@ -103,7 +103,7 @@ func (d *Driver) Write(collection, resource string, v any) error {
 	return os.Rename(tmpPath, finalPath)
 }
 
-func (d *Driver) Read(collection, resource string, v any) error {
+func (d *driver) Read(collection, resource string, v any) error {
 	if len(collection) == 0 {
 		return ErrCollectionUnableRead
 	}
@@ -123,7 +123,7 @@ func (d *Driver) Read(collection, resource string, v any) error {
 	}
 }
 
-func (d *Driver) ReadAll(collection string) ([]string, error) {
+func (d *driver) ReadAll(collection string) ([]string, error) {
 	if len(collection) == 0 {
 		return nil, ErrCollectionUnableRead
 	}
@@ -147,7 +147,7 @@ func (d *Driver) ReadAll(collection string) ([]string, error) {
 	return records, nil
 }
 
-func (d *Driver) Delete(collection, resource string) error {
+func (d *driver) Delete(collection, resource string) error {
 	path := filepath.Join(collection, resource)
 	mu := d.getOrCreateMutex(collection)
 	mu.Lock()
@@ -171,7 +171,7 @@ type Options struct {
 	Logger
 }
 
-func (d *Driver) getOrCreateMutex(collection string) *sync.Mutex {
+func (d *driver) getOrCreateMutex(collection string) *sync.Mutex {
 	d.Lock()
 	defer d.Unlock()
 
